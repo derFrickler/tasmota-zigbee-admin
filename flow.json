@@ -1,0 +1,965 @@
+[
+    {
+        "id": "eb6e5ef1.2cd4b8",
+        "type": "tab",
+        "label": "Tasmota Zigbee Admin",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "14cdd9b2.7c893e",
+        "type": "group",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "Probe to get IPs",
+        "style": {
+            "stroke": "#3f93cf",
+            "label": true,
+            "color": "#3f93cf"
+        },
+        "nodes": [
+            "d1aae5ec.86e0b8",
+            "c47b9b62.cbd838"
+        ],
+        "x": 14,
+        "y": 499,
+        "w": 372,
+        "h": 82
+    },
+    {
+        "id": "351d8dfb.f1bdc2",
+        "type": "group",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "Grep Tasmota telemetry",
+        "style": {
+            "stroke": "#3f93cf",
+            "label": true,
+            "color": "#3f93cf"
+        },
+        "nodes": [
+            "2a0c779f.11c12",
+            "29793bbb.bc641c",
+            "309310f2.10538",
+            "3b813b4e.f33614",
+            "65252b80.000fa4",
+            "90206b3a.200bd",
+            "6116f404.1c4e6c"
+        ],
+        "x": 14,
+        "y": 239,
+        "w": 412,
+        "h": 222
+    },
+    {
+        "id": "42938028.0eb6e",
+        "type": "group",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "Rename Zigbee Devices",
+        "style": {
+            "stroke": "#3f93cf",
+            "label": true,
+            "color": "#3f93cf"
+        },
+        "nodes": [
+            "e3314c94.a72e5",
+            "d0303b49.1ba07",
+            "d102618f.4376a",
+            "a3c6fd03.1bff78",
+            "7d419493.31c42c",
+            "4f683e.2b93c7c4",
+            "33ba890d.f979ee"
+        ],
+        "x": 694,
+        "y": 519,
+        "w": 812,
+        "h": 202
+    },
+    {
+        "id": "89e68b6a.47e11",
+        "type": "group",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "All Zigbee Devices",
+        "style": {
+            "stroke": "#3f93cf",
+            "label": true,
+            "color": "#3f93cf"
+        },
+        "nodes": [
+            "4207292a.605818",
+            "cb97a93c.5c2bd8"
+        ],
+        "x": 694,
+        "y": 379,
+        "w": 492,
+        "h": 82
+    },
+    {
+        "id": "a2b56414.ac5658",
+        "type": "group",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "All Tasmota Devices",
+        "style": {
+            "stroke": "#3f93cf",
+            "label": true,
+            "color": "#3f93cf"
+        },
+        "nodes": [
+            "3b558e12.a47bea"
+        ],
+        "x": 694,
+        "y": 79,
+        "w": 232,
+        "h": 82
+    },
+    {
+        "id": "cd704120.a806e8",
+        "type": "group",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "Manage Zigbee Bridges",
+        "style": {
+            "stroke": "#3f93cf",
+            "label": true,
+            "color": "#3f93cf"
+        },
+        "nodes": [
+            "c8504930.f7e74",
+            "55507632.e9f688",
+            "c042419d.741d88",
+            "355a2e10.58136a",
+            "b0e61c48.e568a8"
+        ],
+        "x": 694,
+        "y": 199,
+        "w": 592,
+        "h": 162
+    },
+    {
+        "id": "2a0c779f.11c12",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "351d8dfb.f1bdc2",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 310,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "29793bbb.bc641c",
+        "type": "mqtt in",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "351d8dfb.f1bdc2",
+        "name": "",
+        "topic": "tele/#",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "3c0dc680.cc0542",
+        "x": 110,
+        "y": 280,
+        "wires": [
+            [
+                "309310f2.10538",
+                "6116f404.1c4e6c"
+            ]
+        ]
+    },
+    {
+        "id": "94c13e53.02bbb",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "store Tasmota Info",
+        "func": "var devs = flow.get(\"tasmotas\") || {};\n\n// extract devname\nlet devName = msg.topic.split(\"/\")[1];\n\n// get dev by name\nlet dev = devs[devName] || {};\n\n// extract data from msg\nif (msg.topic.includes(\"SENSOR\")) {\n    if (msg.payload.ZbReceived !== undefined) {\n        dev.zigbee = true;\n    } else {\n        dev.zigbee = false;\n        return;\n    }\n} else if (msg.topic.includes(\"STATE\")) {\n    dev.STATE = msg.payload;  \n} else if (msg.topic.includes(\"STATUS5\")) {\n    dev.STATUS5 = msg.payload; \n    dev.link = \"<a href=http://\"+msg.payload.StatusNET.IPAddress+\" target=\\\"_blank\\\">\"+devName+\"</a>\";\n} else if (msg.payload.ZbState !== undefined) {\n    dev.ZbState = msg.payload.ZbState;  \n} \n\n// set name/link\ndev.name = devName;\nif (dev.link === undefined) dev.link = dev.name;\n\n// write back\ndevs[devName] = dev;\nflow.set(\"tasmotas\", devs);\n\nreturn {payload:Object.values(devs)};",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 550,
+        "y": 240,
+        "wires": [
+            [
+                "3b558e12.a47bea",
+                "c8504930.f7e74"
+            ]
+        ]
+    },
+    {
+        "id": "309310f2.10538",
+        "type": "json",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "351d8dfb.f1bdc2",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 310,
+        "y": 360,
+        "wires": [
+            [
+                "94c13e53.02bbb",
+                "3b8ec3f4.6dbd44",
+                "e6bd37c4.b62a78"
+            ]
+        ]
+    },
+    {
+        "id": "3b558e12.a47bea",
+        "type": "ui_table",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "a2b56414.ac5658",
+        "group": "373ccf52.d5c97",
+        "name": "Tasmota Devices",
+        "order": 0,
+        "width": "8",
+        "height": "10",
+        "columns": [
+            {
+                "field": "link",
+                "title": "Name",
+                "width": "30%",
+                "align": "left",
+                "formatter": "html",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "zigbee",
+                "title": "Zigbee",
+                "width": "10%",
+                "align": "center",
+                "formatter": "tickCross",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "STATE.Wifi.RSSI",
+                "title": "RSSI",
+                "width": "10%",
+                "align": "left",
+                "formatter": "progress",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "STATE.Uptime",
+                "title": "Uptime",
+                "width": "25%",
+                "align": "right",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "STATE.Wifi.Downtime",
+                "title": "Downtime",
+                "width": "25%",
+                "align": "left",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            }
+        ],
+        "outputs": 0,
+        "cts": false,
+        "x": 810,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "3b813b4e.f33614",
+        "type": "mqtt in",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "351d8dfb.f1bdc2",
+        "name": "",
+        "topic": "stat/+/STATUS5",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "3c0dc680.cc0542",
+        "x": 120,
+        "y": 340,
+        "wires": [
+            [
+                "309310f2.10538",
+                "2a0c779f.11c12"
+            ]
+        ]
+    },
+    {
+        "id": "c8504930.f7e74",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "cd704120.a806e8",
+        "name": "filter Zigbee Bridges",
+        "func": "let zbBridges = msg.payload.filter(function(el) {\n      return el.zigbee === true;\n  })\n\nmsg.payload = zbBridges;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 820,
+        "y": 240,
+        "wires": [
+            [
+                "55507632.e9f688",
+                "355a2e10.58136a"
+            ]
+        ]
+    },
+    {
+        "id": "e3314c94.a72e5",
+        "type": "ui_dropdown",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "42938028.0eb6e",
+        "name": "",
+        "label": "Device",
+        "tooltip": "",
+        "place": "",
+        "group": "4d67a6b2.8bc0e",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "multiple": false,
+        "options": [
+            {
+                "label": "",
+                "value": "",
+                "type": "str"
+            }
+        ],
+        "payload": "",
+        "topic": "oldname",
+        "x": 1050,
+        "y": 560,
+        "wires": [
+            [
+                "4f683e.2b93c7c4"
+            ]
+        ]
+    },
+    {
+        "id": "d0303b49.1ba07",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "42938028.0eb6e",
+        "name": "extract devicenames",
+        "func": "\nmsg.options = msg.payload.map(obj => {\n   var rObj = {};\n   rObj[obj.label] = obj.bridge+\"/\"+obj.Device;\n   return rObj;\n});\n\nmsg.payload = {};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 820,
+        "y": 560,
+        "wires": [
+            [
+                "e3314c94.a72e5"
+            ]
+        ]
+    },
+    {
+        "id": "d1aae5ec.86e0b8",
+        "type": "inject",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "14cdd9b2.7c893e",
+        "name": "Send probe",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "60",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "topic": "cmnd/sonoffs/STATUS",
+        "payload": "5",
+        "payloadType": "str",
+        "x": 130,
+        "y": 540,
+        "wires": [
+            [
+                "c47b9b62.cbd838"
+            ]
+        ]
+    },
+    {
+        "id": "c47b9b62.cbd838",
+        "type": "mqtt out",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "14cdd9b2.7c893e",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "broker": "3c0dc680.cc0542",
+        "x": 310,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "3b8ec3f4.6dbd44",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "store zigbee sensors",
+        "func": "if (msg.payload.ZbReceived === undefined) return;\n\n//node.warn(msg.payload);\n\nvar devs = flow.get(\"t2zdevices\") || {};\n\nfor (var devN in msg.payload.ZbReceived) {\n    let devInfo = msg.payload.ZbReceived[devN];\n    let ID = devInfo.Device;\n    \n    // get dev by ID\n    let dev = devs[ID] || {};\n    dev.label = devN;\n    dev.bridge = msg.topic.split(\"/\")[1];\n    dev.lastTime = new Date().getTime();\n    \n    for (var prop in devInfo) {\n        dev[prop] = devInfo[prop];\n    }\n    let status = \"\";\n    if (dev.Occupancy!==undefined) {\n        status += \" Occupancy: \"+ dev.Occupancy\n    }\n    if (dev.Power!==undefined) {\n        status += \" Power: \"+ dev.Power\n    }\n    if (dev.Temperature!==undefined) {\n        status += \" Temperature: \"+ dev.Temperature\n    }\n    if (dev.Humidity!==undefined) {\n        status += \" Humidity: \"+ dev.Humidity\n    }\n    if (dev.LocalTemperature!==undefined) {\n        status += \" Temperature: \"+ dev.LocalTemperature\n    }\n    if (dev.OccupiedHeatingSetpoint!==undefined) {\n        status += \" Heating Point: \"+ dev.OccupiedHeatingSetpoint\n    }\n    if (dev.PIHeatingDemand!==undefined) {\n        status += \" PIHeatingDemand: \"+ dev.PIHeatingDemand\n    }\n    dev.status = status;\n\n    // write back\n    devs[ID] = dev;\n}\n\n\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\nflow.set(\"t2zdevices\", devs);\n\nreturn {payload:Object.values(devs)};\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 560,
+        "y": 420,
+        "wires": [
+            [
+                "4207292a.605818",
+                "cb97a93c.5c2bd8",
+                "d0303b49.1ba07"
+            ]
+        ]
+    },
+    {
+        "id": "4207292a.605818",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "89e68b6a.47e11",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1070,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "65252b80.000fa4",
+        "type": "mqtt in",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "351d8dfb.f1bdc2",
+        "name": "",
+        "topic": "tele/+/INFO2",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "3c0dc680.cc0542",
+        "x": 110,
+        "y": 420,
+        "wires": [
+            [
+                "90206b3a.200bd"
+            ]
+        ]
+    },
+    {
+        "id": "90206b3a.200bd",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "351d8dfb.f1bdc2",
+        "name": "Info2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 290,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "cb97a93c.5c2bd8",
+        "type": "ui_table",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "89e68b6a.47e11",
+        "group": "d325c76.7444a38",
+        "name": "Zigbee Devices",
+        "order": 1,
+        "width": "22",
+        "height": "13",
+        "columns": [
+            {
+                "field": "label",
+                "title": "Label",
+                "width": "12px",
+                "align": "left",
+                "formatter": "html",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "Device",
+                "title": "Device",
+                "width": "7px",
+                "align": "left",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "bridge",
+                "title": "Bridge",
+                "width": "12px",
+                "align": "left",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "LinkQuality",
+                "title": "RSSI",
+                "width": "6px",
+                "align": "left",
+                "formatter": "progress",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "BatteryPercentage",
+                "title": "Battery",
+                "width": "6px",
+                "align": "left",
+                "formatter": "progress",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "seen",
+                "title": "Last Seen",
+                "width": "15px",
+                "align": "left",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "status",
+                "title": "Status",
+                "width": "40px",
+                "align": "left",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            }
+        ],
+        "outputs": 0,
+        "cts": false,
+        "x": 800,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "55507632.e9f688",
+        "type": "ui_table",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "cd704120.a806e8",
+        "group": "5b9b9721.b33e6",
+        "name": "Zigbee Bridges",
+        "order": 0,
+        "width": "8",
+        "height": "3",
+        "columns": [
+            {
+                "field": "link",
+                "title": "Name",
+                "width": "28%",
+                "align": "left",
+                "formatter": "html",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "STATE.Wifi.RSSI",
+                "title": "RSSI",
+                "width": "12%",
+                "align": "left",
+                "formatter": "progress",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "STATE.Uptime",
+                "title": "Uptime",
+                "width": "15%",
+                "align": "right",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "STATE.Wifi.Downtime",
+                "title": "Downtime",
+                "width": "15%",
+                "align": "left",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "ZbState.Message",
+                "title": "ZB Status",
+                "width": "30%",
+                "align": "left",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            }
+        ],
+        "outputs": 0,
+        "cts": false,
+        "x": 1080,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "d102618f.4376a",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "42938028.0eb6e",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1410,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "a3c6fd03.1bff78",
+        "type": "ui_button",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "42938028.0eb6e",
+        "name": "",
+        "group": "4d67a6b2.8bc0e",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Rename",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "rename",
+        "x": 1060,
+        "y": 680,
+        "wires": [
+            [
+                "4f683e.2b93c7c4"
+            ]
+        ]
+    },
+    {
+        "id": "7d419493.31c42c",
+        "type": "ui_text_input",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "42938028.0eb6e",
+        "name": "",
+        "label": "New Name",
+        "tooltip": "",
+        "group": "4d67a6b2.8bc0e",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "mode": "text",
+        "delay": 300,
+        "topic": "newname",
+        "x": 1070,
+        "y": 620,
+        "wires": [
+            [
+                "4f683e.2b93c7c4"
+            ]
+        ]
+    },
+    {
+        "id": "4f683e.2b93c7c4",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "42938028.0eb6e",
+        "name": "Rename Zigbee Dev.",
+        "func": "let rename = flow.get(\"renameZigbee\") || {};\nflow.set(\"renameZigbee\", rename);\n\nif (msg.topic === \"oldname\" && msg.payload !== \"\") {\n    let vars = msg.payload.split(\"/\");\n    rename.bridge = vars[0];\n    rename.device = vars[1];\n    flow.set(\"renameZigbee\", rename);\n    return;\n} else if (msg.topic === \"newname\") {\n    rename.newname = msg.payload;\n    flow.set(\"renameZigbee\", rename);\n    return;\n} else if (msg.topic === \"rename\") {\n    msg.topic = \"cmnd/\"+rename.bridge+\"/ZbName\";\n    msg.payload = rename.device + \" \" + rename.newname;\n}\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1300,
+        "y": 580,
+        "wires": [
+            [
+                "ea52f005.796308",
+                "33ba890d.f979ee"
+            ]
+        ]
+    },
+    {
+        "id": "ea52f005.796308",
+        "type": "mqtt out",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "broker": "3c0dc680.cc0542",
+        "x": 1490,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "33ba890d.f979ee",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "42938028.0eb6e",
+        "name": "Clear",
+        "func": "flow.set(\"renameZigbee\", {});\ndelete msg.payload;\nmsg.payload =\"\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1270,
+        "y": 660,
+        "wires": [
+            [
+                "7d419493.31c42c",
+                "d102618f.4376a"
+            ]
+        ]
+    },
+    {
+        "id": "c042419d.741d88",
+        "type": "ui_dropdown",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "cd704120.a806e8",
+        "name": "",
+        "label": "PermitJoin",
+        "tooltip": "",
+        "place": "",
+        "group": "6aae236.d2eeedc",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "multiple": false,
+        "options": [
+            {
+                "label": "",
+                "value": "",
+                "type": "str"
+            }
+        ],
+        "payload": "",
+        "topic": "oldname",
+        "x": 1030,
+        "y": 320,
+        "wires": [
+            [
+                "b0e61c48.e568a8"
+            ]
+        ]
+    },
+    {
+        "id": "355a2e10.58136a",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "cd704120.a806e8",
+        "name": "extract devicenames",
+        "func": "\nmsg.options = msg.payload.map(obj => {\n   return obj.name;\n});\n\nmsg.payload = {};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 820,
+        "y": 320,
+        "wires": [
+            [
+                "c042419d.741d88"
+            ]
+        ]
+    },
+    {
+        "id": "b0e61c48.e568a8",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "cd704120.a806e8",
+        "name": "permitJoin",
+        "func": "\nmsg.topic = \"cmnd/\"+msg.payload+\"/ZbPermitJoin\";\nmsg.payload = 1;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1190,
+        "y": 320,
+        "wires": [
+            [
+                "ea52f005.796308"
+            ]
+        ]
+    },
+    {
+        "id": "6116f404.1c4e6c",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "351d8dfb.f1bdc2",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 310,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "e6bd37c4.b62a78",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 530,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "8646e2c.9e0f4a",
+        "type": "catch",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "",
+        "scope": [
+            "309310f2.10538"
+        ],
+        "uncaught": false,
+        "x": 510,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3c0dc680.cc0542",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "homeserver localhost",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "node-red",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "373ccf52.d5c97",
+        "type": "ui_group",
+        "z": "",
+        "name": "Tasmota Devices",
+        "tab": "abe3d4c.9322328",
+        "order": 1,
+        "disp": true,
+        "width": "8",
+        "collapse": false
+    },
+    {
+        "id": "4d67a6b2.8bc0e",
+        "type": "ui_group",
+        "z": "",
+        "name": "Rename Zigbee Device",
+        "tab": "abe3d4c.9322328",
+        "order": 5,
+        "disp": true,
+        "width": "8",
+        "collapse": false
+    },
+    {
+        "id": "d325c76.7444a38",
+        "type": "ui_group",
+        "z": "",
+        "name": "Zigbee Devices",
+        "tab": "abe3d4c.9322328",
+        "order": 3,
+        "disp": true,
+        "width": "22",
+        "collapse": false
+    },
+    {
+        "id": "5b9b9721.b33e6",
+        "type": "ui_group",
+        "z": "",
+        "name": "Tasmota Zigbee Bridges",
+        "tab": "abe3d4c.9322328",
+        "order": 2,
+        "disp": true,
+        "width": "8",
+        "collapse": false
+    },
+    {
+        "id": "6aae236.d2eeedc",
+        "type": "ui_group",
+        "z": "",
+        "name": "Manage Zigbee Bridges",
+        "tab": "abe3d4c.9322328",
+        "order": 4,
+        "disp": true,
+        "width": "8",
+        "collapse": false
+    },
+    {
+        "id": "abe3d4c.9322328",
+        "type": "ui_tab",
+        "z": "",
+        "name": "Tasmota Zigbee",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
