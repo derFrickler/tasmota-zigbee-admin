@@ -16,3 +16,5 @@ required node-red plugins:
   * node-red-node-ui-table
   
   if using node-red < 1.1, please install plugin node-red-node-group aswell.
+
+![Alt text](Tasmota_Zigbee_Admin.png?raw=true "Screenshot")
