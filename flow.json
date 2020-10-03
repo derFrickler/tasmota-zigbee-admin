@@ -18,12 +18,13 @@
         },
         "nodes": [
             "d1aae5ec.86e0b8",
-            "c47b9b62.cbd838"
+            "c47b9b62.cbd838",
+            "ca2ee2dc.d020e"
         ],
         "x": 14,
         "y": 499,
         "w": 372,
-        "h": 82
+        "h": 122
     },
     {
         "id": "351d8dfb.f1bdc2",
@@ -173,7 +174,7 @@
         "type": "function",
         "z": "eb6e5ef1.2cd4b8",
         "name": "store Tasmota Info",
-        "func": "var devs = flow.get(\"tasmotas\") || {};\n\n// extract devname\nlet devName = msg.topic.split(\"/\")[1];\n\n// get dev by name\nlet dev = devs[devName] || {};\ndev.lastTime = new Date().getTime();\n\n// extract data from msg\nif (msg.topic.includes(\"SENSOR\")) {\n    if (msg.payload.ZbReceived !== undefined) {\n        dev.zigbee = true;\n    } else {\n        dev.zigbee = false;\n        return;\n    }\n} else if (msg.topic.includes(\"STATE\")) {\n    dev.STATE = msg.payload;  \n} else if (msg.topic.includes(\"STATUS5\")) {\n    dev.STATUS5 = msg.payload; \n    dev.link = \"<a href=http://\"+msg.payload.StatusNET.IPAddress+\" target=\\\"_blank\\\">\"+devName+\"</a>\";\n} else if (msg.payload.ZbState !== undefined) {\n    dev.ZbState = msg.payload.ZbState;  \n} \n\n// set name/link\ndev.name = devName;\nif (dev.link === undefined) dev.link = dev.name;\n\n// calc last seen\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\n// write back\ndevs[devName] = dev;\nflow.set(\"tasmotas\", devs);\n\nreturn {payload:Object.values(devs)};",
+        "func": "var devs = flow.get(\"tasmotas\") || {};\n\n// extract devname\nlet devName = msg.topic.split(\"/\")[1];\n\n// get dev by name\nlet dev = devs[devName] || {};\ndev.lastTime = new Date().getTime();\n\n// extract data from msg\nif (msg.topic.includes(\"SENSOR\")) {\n    if (msg.payload.ZbReceived !== undefined) {\n        dev.zigbee = true;\n    } else {\n        dev.zigbee = false;\n        return;\n    }\n} else if (msg.topic.includes(\"STATE\")) {\n    dev.STATE = msg.payload;  \n} else if (msg.topic.includes(\"STATUS5\")) {\n    dev.STATUS5 = msg.payload; \n    dev.link = \"<a href=http://\"+msg.payload.StatusNET.IPAddress+\" target=\\\"_blank\\\">\"+devName+\"</a>\";\n} else if (msg.topic.includes(\"INFO2\")) {\n    dev.INFO2 = msg.payload; \n    dev.link = \"<a href=http://\"+msg.payload.IPAddress+\" target=\\\"_blank\\\">\"+devName+\"</a>\";\n} else if (msg.payload.ZbState !== undefined) {\n    dev.ZbState = msg.payload.ZbState;  \n} \n\n// set name/link\ndev.name = devName;\nif (dev.link === undefined) dev.link = dev.name;\n\n// calc last seen\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\n// write back\ndevs[devName] = dev;\nflow.set(\"tasmotas\", devs);\n\nreturn {payload:Object.values(devs)};",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -413,7 +414,7 @@
         "type": "function",
         "z": "eb6e5ef1.2cd4b8",
         "name": "store zigbee sensors",
-        "func": "if (msg.payload.ZbReceived === undefined) return;\n\n//node.warn(msg.payload);\n\nvar devs = flow.get(\"t2zdevices\") || {};\n\nfor (var devN in msg.payload.ZbReceived) {\n    let devInfo = msg.payload.ZbReceived[devN];\n    let ID = devInfo.Device;\n    \n    // get dev by ID\n    let dev = devs[ID] || {};\n    dev.label = devN;\n    dev.bridge = msg.topic.split(\"/\")[1];\n    dev.lastTime = new Date().getTime();\n    \n    for (var prop in devInfo) {\n        dev[prop] = devInfo[prop];\n    }\n    let status = \"\";\n    if (dev.Occupancy!==undefined) {\n        status += \" Occupancy: \"+ dev.Occupancy\n    }\n    if (dev.Power!==undefined) {\n        status += \" Power: \"+ dev.Power\n    }\n    if (dev.Temperature!==undefined) {\n        status += \" Temperature: \"+ dev.Temperature\n    }\n    if (dev.Humidity!==undefined) {\n        status += \" Humidity: \"+ dev.Humidity\n    }\n    if (dev.LocalTemperature!==undefined) {\n        status += \" Temperature: \"+ dev.LocalTemperature\n    }\n    if (dev.OccupiedHeatingSetpoint!==undefined) {\n        status += \" Heating Point: \"+ dev.OccupiedHeatingSetpoint\n    }\n    if (dev.PIHeatingDemand!==undefined) {\n        status += \" PIHeatingDemand: \"+ dev.PIHeatingDemand\n    }\n    dev.status = status;\n\n    // write back\n    devs[ID] = dev;\n}\n\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\nflow.set(\"t2zdevices\", devs);\n\nreturn {payload:Object.values(devs)};\n",
+        "func": "if (msg.payload.ZbReceived === undefined) return;\n\n// properties that should not show up in the status\nvar notStatus = [\"Device\", \"Name\", \"BatteryVoltage\", \"BatteryPercentage\", \"LinkQuality\", \"Endpoint\", \"bridge\", \"lastTime\", \"seen\", \"label\", \"status\", \"EurotronicErrors\", \"0201/4008\", \"Xiaomi_64\"];\n\n//node.warn(msg.payload);\n\nvar devs = flow.get(\"t2zdevices\") || {};\n\nfor (var devN in msg.payload.ZbReceived) {\n    let devInfo = msg.payload.ZbReceived[devN];\n    let ID = devInfo.Device;\n    \n    // get dev by ID\n    let dev = devs[ID] || {};\n\n    for (let prop in devInfo) {\n        dev[prop] = devInfo[prop];\n    }\n    \n    if (devInfo.Name!==undefined) {\n        dev.label = devInfo.Name;\n    } else {\n        dev.label = ID; \n    }\n    dev.bridge = msg.topic.split(\"/\")[1];\n    dev.lastTime = new Date().getTime();\n    \n    // create status from properties\n    let status = \"\";\n    for (let prop in dev) {\n        if (! notStatus.includes(prop)) {\n            status += \" \"+prop+\": \"+ dev[prop]; \n        }\n    }\n    dev.status = status;\n    \n/*  // or create the status label manually\n    let status = \"\";\n    if (dev.Occupancy!==undefined) {\n        status += \" Occupancy: \"+ dev.Occupancy\n    }\n    if (dev.Power!==undefined) {\n        status += \" Power: \"+ dev.Power\n    }\n    if (dev.Temperature!==undefined) {\n        status += \" Temperature: \"+ dev.Temperature\n    }\n    if (dev.Humidity!==undefined) {\n        status += \" Humidity: \"+ dev.Humidity\n    }\n    if (dev.LocalTemperature!==undefined) {\n        status += \" Temperature: \"+ dev.LocalTemperature\n    }\n    if (dev.OccupiedHeatingSetpoint!==undefined) {\n        status += \" Heating Point: \"+ dev.OccupiedHeatingSetpoint\n    }\n    if (dev.PIHeatingDemand!==undefined) {\n        status += \" PIHeatingDemand: \"+ dev.PIHeatingDemand\n    }\n    if (dev.Illuminance!==undefined) {\n        status += \" Illuminance: \"+ dev.Illuminance\n    }\n    dev.status = status;\n*/\n\n    // write back\n    devs[ID] = dev;\n}\n\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\nflow.set(\"t2zdevices\", devs);\n\nreturn {payload:Object.values(devs)};\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -459,7 +460,8 @@
         "y": 420,
         "wires": [
             [
-                "90206b3a.200bd"
+                "90206b3a.200bd",
+                "309310f2.10538"
             ]
         ]
     },
@@ -865,6 +867,36 @@
         "y": 460,
         "wires": [
             []
+        ]
+    },
+    {
+        "id": "ca2ee2dc.d020e",
+        "type": "inject",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "14cdd9b2.7c893e",
+        "name": "Send probe",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "60",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "topic": "cmnd/tasmotas/STATUS",
+        "payload": "5",
+        "payloadType": "str",
+        "x": 130,
+        "y": 580,
+        "wires": [
+            [
+                "c47b9b62.cbd838"
+            ]
         ]
     },
     {
