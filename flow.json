@@ -10,7 +10,7 @@
         "id": "14cdd9b2.7c893e",
         "type": "group",
         "z": "eb6e5ef1.2cd4b8",
-        "name": "Probe to get IPs",
+        "name": "Probe to get IPs and Infos",
         "style": {
             "stroke": "#3f93cf",
             "label": true,
@@ -19,12 +19,14 @@
         "nodes": [
             "d1aae5ec.86e0b8",
             "c47b9b62.cbd838",
-            "ca2ee2dc.d020e"
+            "ca2ee2dc.d020e",
+            "eaaf6424.48b1f8",
+            "4bf1e994.18008"
         ],
         "x": 14,
         "y": 499,
         "w": 372,
-        "h": 122
+        "h": 202
     },
     {
         "id": "351d8dfb.f1bdc2",
@@ -46,9 +48,9 @@
             "6116f404.1c4e6c"
         ],
         "x": 14,
-        "y": 239,
+        "y": 219,
         "w": 412,
-        "h": 222
+        "h": 262
     },
     {
         "id": "42938028.0eb6e",
@@ -85,12 +87,11 @@
             "color": "#3f93cf"
         },
         "nodes": [
-            "4207292a.605818",
             "cb97a93c.5c2bd8"
         ],
         "x": 694,
         "y": 379,
-        "w": 492,
+        "w": 212,
         "h": 82
     },
     {
@@ -147,7 +148,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 310,
-        "y": 320,
+        "y": 300,
         "wires": []
     },
     {
@@ -161,7 +162,7 @@
         "datatype": "auto",
         "broker": "3c0dc680.cc0542",
         "x": 110,
-        "y": 280,
+        "y": 260,
         "wires": [
             [
                 "309310f2.10538",
@@ -174,7 +175,7 @@
         "type": "function",
         "z": "eb6e5ef1.2cd4b8",
         "name": "store Tasmota Info",
-        "func": "var devs = flow.get(\"tasmotas\") || {};\n\n// extract devname\nlet devName = msg.topic.split(\"/\")[1];\n\n// get dev by name\nlet dev = devs[devName] || {};\ndev.lastTime = new Date().getTime();\n\n// extract data from msg\nif (msg.topic.includes(\"SENSOR\")) {\n    if (msg.payload.ZbReceived !== undefined) {\n        dev.zigbee = true;\n    } else {\n        dev.zigbee = false;\n        return;\n    }\n} else if (msg.topic.includes(\"STATE\")) {\n    dev.STATE = msg.payload;  \n} else if (msg.topic.includes(\"STATUS5\")) {\n    dev.STATUS5 = msg.payload; \n    dev.link = \"<a href=http://\"+msg.payload.StatusNET.IPAddress+\" target=\\\"_blank\\\">\"+devName+\"</a>\";\n} else if (msg.topic.includes(\"INFO2\")) {\n    dev.INFO2 = msg.payload; \n    dev.link = \"<a href=http://\"+msg.payload.IPAddress+\" target=\\\"_blank\\\">\"+devName+\"</a>\";\n} else if (msg.payload.ZbState !== undefined) {\n    dev.ZbState = msg.payload.ZbState;  \n} \n\n// set name/link\ndev.name = devName;\nif (dev.link === undefined) dev.link = dev.name;\n\n// calc last seen\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\n// write back\ndevs[devName] = dev;\nflow.set(\"tasmotas\", devs);\n\nreturn {payload:Object.values(devs)};",
+        "func": "var devs = flow.get(\"tasmotas\") || {};\n\n// extract devname\nlet devName = msg.topic.split(\"/\")[1];\n\n// get dev by name\nlet dev = devs[devName] || {};\ndev.lastTime = new Date().getTime();\n\n// extract data from msg\nif (msg.topic.includes(\"SENSOR\")) {\n    if (msg.payload.ZbReceived !== undefined) {\n        dev.zigbee = true;\n    } else {\n        dev.zigbee = false;\n        return;\n    }\n} else if (msg.topic.includes(\"STATE\")) {\n    dev.STATE = msg.payload;  \n} else if (msg.topic.includes(\"STATUS5\")) {\n    dev.STATUS5 = msg.payload; \n    dev.link = \"<a href=http://\"+msg.payload.StatusNET.IPAddress+\" target=\\\"_blank\\\">\"+devName+\"</a>\";\n} else if (msg.topic.includes(\"STATUS2\")) {\n    dev.STATUS2 = msg.payload;  \n} else if (msg.topic.includes(\"INFO2\")) {\n    dev.INFO2 = msg.payload; \n    dev.link = \"<a href=http://\"+msg.payload.IPAddress+\" target=\\\"_blank\\\">\"+devName+\"</a>\";\n} else if (msg.payload.ZbState !== undefined) {\n    dev.ZbState = msg.payload.ZbState;  \n} \n\n// set name/link\ndev.name = devName;\nif (dev.link === undefined) dev.link = dev.name;\n\n// calc last seen\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\n// write back\ndevs[devName] = dev;\nflow.set(\"tasmotas\", devs);\n\nreturn {payload:Object.values(devs)};",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -198,7 +199,7 @@
         "action": "",
         "pretty": false,
         "x": 310,
-        "y": 360,
+        "y": 340,
         "wires": [
             [
                 "94c13e53.02bbb",
@@ -216,12 +217,12 @@
         "name": "Tasmota Devices",
         "order": 0,
         "width": "8",
-        "height": "10",
+        "height": "13",
         "columns": [
             {
                 "field": "link",
                 "title": "Name",
-                "width": "40%",
+                "width": "35%",
                 "align": "left",
                 "formatter": "html",
                 "formatterParams": {
@@ -249,9 +250,19 @@
                 }
             },
             {
+                "field": "STATUS2.StatusFWR.Version",
+                "title": "FW",
+                "width": "17%",
+                "align": "left",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
                 "field": "STATE.Uptime",
                 "title": "Uptime",
-                "width": "25%",
+                "width": "15%",
                 "align": "right",
                 "formatter": "plaintext",
                 "formatterParams": {
@@ -261,7 +272,7 @@
             {
                 "field": "seen",
                 "title": "Last",
-                "width": "15%",
+                "width": "12%",
                 "align": "left",
                 "formatter": "plaintext",
                 "formatterParams": {
@@ -286,7 +297,7 @@
         "datatype": "auto",
         "broker": "3c0dc680.cc0542",
         "x": 120,
-        "y": 340,
+        "y": 320,
         "wires": [
             [
                 "309310f2.10538",
@@ -380,7 +391,7 @@
                 "vt": "str"
             }
         ],
-        "repeat": "60",
+        "repeat": "1800",
         "crontab": "",
         "once": true,
         "onceDelay": "",
@@ -414,7 +425,7 @@
         "type": "function",
         "z": "eb6e5ef1.2cd4b8",
         "name": "store zigbee sensors",
-        "func": "if (msg.payload.ZbReceived === undefined) return;\n\n// properties that should not show up in the status\nvar notStatus = [\"Device\", \"Name\", \"BatteryVoltage\", \"BatteryPercentage\", \"LinkQuality\", \"Endpoint\", \"bridge\", \"lastTime\", \"seen\", \"label\", \"status\", \"EurotronicErrors\", \"0201/4008\", \"Xiaomi_64\"];\n\n//node.warn(msg.payload);\n\nvar devs = flow.get(\"t2zdevices\") || {};\n\nfor (var devN in msg.payload.ZbReceived) {\n    let devInfo = msg.payload.ZbReceived[devN];\n    let ID = devInfo.Device;\n    \n    // get dev by ID\n    let dev = devs[ID] || {};\n\n    for (let prop in devInfo) {\n        dev[prop] = devInfo[prop];\n    }\n    \n    if (devInfo.Name!==undefined) {\n        dev.label = devInfo.Name;\n    } else {\n        dev.label = ID; \n    }\n    dev.bridge = msg.topic.split(\"/\")[1];\n    dev.lastTime = new Date().getTime();\n    \n    // create status from properties\n    let status = \"\";\n    for (let prop in dev) {\n        if (! notStatus.includes(prop)) {\n            status += \" \"+prop+\": \"+ dev[prop]; \n        }\n    }\n    dev.status = status;\n    \n/*  // or create the status label manually\n    let status = \"\";\n    if (dev.Occupancy!==undefined) {\n        status += \" Occupancy: \"+ dev.Occupancy\n    }\n    if (dev.Power!==undefined) {\n        status += \" Power: \"+ dev.Power\n    }\n    if (dev.Temperature!==undefined) {\n        status += \" Temperature: \"+ dev.Temperature\n    }\n    if (dev.Humidity!==undefined) {\n        status += \" Humidity: \"+ dev.Humidity\n    }\n    if (dev.LocalTemperature!==undefined) {\n        status += \" Temperature: \"+ dev.LocalTemperature\n    }\n    if (dev.OccupiedHeatingSetpoint!==undefined) {\n        status += \" Heating Point: \"+ dev.OccupiedHeatingSetpoint\n    }\n    if (dev.PIHeatingDemand!==undefined) {\n        status += \" PIHeatingDemand: \"+ dev.PIHeatingDemand\n    }\n    if (dev.Illuminance!==undefined) {\n        status += \" Illuminance: \"+ dev.Illuminance\n    }\n    dev.status = status;\n*/\n\n    // write back\n    devs[ID] = dev;\n}\n\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\nflow.set(\"t2zdevices\", devs);\n\nreturn {payload:Object.values(devs)};\n",
+        "func": "if (msg.payload.ZbReceived === undefined) return;\n\n// properties that should  show up in the status\nvar inStatus = [\"Occupancy\", \"Power\", \"Power2\", \"Temperature\", \"Humidity\", \"LocalTemperature\", \"OccupiedHeatingSetpoint\", \"PIHeatingDemand\", \"Illuminance\"];\n\n// properties that should not show up in the status\nvar notStatus = [\"Device\", \"Name\", \"BatteryVoltage\", \"BatteryPercentage\", \"LinkQuality\", \"Endpoint\", \"bridge\", \"lastTime\", \"seen\", \"label\", \"status\", \"EurotronicErrors\", \"0201/4008\", \"Xiaomi_64\"];\n\n//node.warn(msg.payload);\n\nvar devs = flow.get(\"t2zdevices\") || {};\n\nfor (var devN in msg.payload.ZbReceived) {\n    let devInfo = msg.payload.ZbReceived[devN];\n    let ID = devInfo.Device;\n    \n    // get dev by ID\n    let dev = devs[ID] || {};\n\n    for (let prop in devInfo) {\n        dev[prop] = devInfo[prop];\n    }\n    \n    if (devInfo.Name!==undefined) {\n        dev.label = devInfo.Name;\n    } else {\n        dev.label = ID; \n    }\n    dev.bridge = msg.topic.split(\"/\")[1];\n    dev.lastTime = new Date().getTime();\n    \n    // create status from properties\n    let status = \"\";\n    for (let prop in dev) {\n        if (inStatus.includes(prop)) {\n            status += \" \"+prop+\": \"+ dev[prop]; \n        }\n    }\n    if (status === \"\") {\n        for (let prop in dev) {\n            if (! notStatus.includes(prop)) {\n                status += \" \"+prop+\": \"+ dev[prop]; \n            }\n        }   \n    }\n    dev.status = status;\n    \n    // write back\n    devs[ID] = dev;\n}\n\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\nflow.set(\"t2zdevices\", devs);\n\nreturn {payload:Object.values(devs)};\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -423,28 +434,10 @@
         "y": 420,
         "wires": [
             [
-                "4207292a.605818",
                 "cb97a93c.5c2bd8",
                 "d0303b49.1ba07"
             ]
         ]
-    },
-    {
-        "id": "4207292a.605818",
-        "type": "debug",
-        "z": "eb6e5ef1.2cd4b8",
-        "g": "89e68b6a.47e11",
-        "name": "",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1070,
-        "y": 420,
-        "wires": []
     },
     {
         "id": "65252b80.000fa4",
@@ -457,7 +450,7 @@
         "datatype": "auto",
         "broker": "3c0dc680.cc0542",
         "x": 110,
-        "y": 420,
+        "y": 440,
         "wires": [
             [
                 "90206b3a.200bd",
@@ -480,7 +473,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 290,
-        "y": 420,
+        "y": 400,
         "wires": []
     },
     {
@@ -497,7 +490,7 @@
             {
                 "field": "label",
                 "title": "Label",
-                "width": "15px",
+                "width": "15%",
                 "align": "left",
                 "formatter": "html",
                 "formatterParams": {
@@ -507,7 +500,7 @@
             {
                 "field": "Device",
                 "title": "Device",
-                "width": "7px",
+                "width": "8%",
                 "align": "left",
                 "formatter": "plaintext",
                 "formatterParams": {
@@ -517,7 +510,7 @@
             {
                 "field": "bridge",
                 "title": "Bridge",
-                "width": "12px",
+                "width": "10%",
                 "align": "left",
                 "formatter": "plaintext",
                 "formatterParams": {
@@ -527,7 +520,7 @@
             {
                 "field": "LinkQuality",
                 "title": "RSSI",
-                "width": "6px",
+                "width": "6%",
                 "align": "left",
                 "formatter": "progress",
                 "formatterParams": {
@@ -537,7 +530,7 @@
             {
                 "field": "BatteryPercentage",
                 "title": "Bat.",
-                "width": "6px",
+                "width": "6%",
                 "align": "left",
                 "formatter": "progress",
                 "formatterParams": {
@@ -547,7 +540,7 @@
             {
                 "field": "seen",
                 "title": "Last",
-                "width": "6px",
+                "width": "6%",
                 "align": "left",
                 "formatter": "plaintext",
                 "formatterParams": {
@@ -557,7 +550,7 @@
             {
                 "field": "status",
                 "title": "Status",
-                "width": "40px",
+                "width": "49%",
                 "align": "left",
                 "formatter": "plaintext",
                 "formatterParams": {
@@ -835,7 +828,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 310,
-        "y": 280,
+        "y": 260,
         "wires": []
     },
     {
@@ -884,7 +877,7 @@
                 "vt": "str"
             }
         ],
-        "repeat": "60",
+        "repeat": "1800",
         "crontab": "",
         "once": true,
         "onceDelay": "",
@@ -893,6 +886,84 @@
         "payloadType": "str",
         "x": 130,
         "y": 580,
+        "wires": [
+            [
+                "c47b9b62.cbd838"
+            ]
+        ]
+    },
+    {
+        "id": "eaaf6424.48b1f8",
+        "type": "inject",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "14cdd9b2.7c893e",
+        "name": "Send probe",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1800",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "topic": "cmnd/sonoffs/STATUS",
+        "payload": "2",
+        "payloadType": "str",
+        "x": 130,
+        "y": 620,
+        "wires": [
+            [
+                "c47b9b62.cbd838"
+            ]
+        ]
+    },
+    {
+        "id": "55717615.e3e87",
+        "type": "mqtt in",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "",
+        "topic": "stat/+/STATUS2",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "3c0dc680.cc0542",
+        "x": 120,
+        "y": 380,
+        "wires": [
+            [
+                "309310f2.10538",
+                "90206b3a.200bd"
+            ]
+        ]
+    },
+    {
+        "id": "4bf1e994.18008",
+        "type": "inject",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "14cdd9b2.7c893e",
+        "name": "Send probe",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1800",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "topic": "cmnd/tasmotas/STATUS",
+        "payload": "2",
+        "payloadType": "str",
+        "x": 130,
+        "y": 660,
         "wires": [
             [
                 "c47b9b62.cbd838"
