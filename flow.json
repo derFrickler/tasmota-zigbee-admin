@@ -87,11 +87,13 @@
             "color": "#3f93cf"
         },
         "nodes": [
-            "cb97a93c.5c2bd8"
+            "cb97a93c.5c2bd8",
+            "604d976c.ca65c",
+            "e50a0510.b75ba"
         ],
         "x": 694,
         "y": 379,
-        "w": 212,
+        "w": 572,
         "h": 82
     },
     {
@@ -105,12 +107,17 @@
             "color": "#3f93cf"
         },
         "nodes": [
-            "3b558e12.a47bea"
+            "3b558e12.a47bea",
+            "5ebd7809.9c0b58",
+            "41ad9a48.328914",
+            "5e7b4dc6.a512c4",
+            "f8a6cfbd.363e28",
+            "f6c18953.c0a0f"
         ],
         "x": 694,
-        "y": 79,
-        "w": 232,
-        "h": 82
+        "y": 39,
+        "w": 652,
+        "h": 142
     },
     {
         "id": "cd704120.a806e8",
@@ -215,7 +222,7 @@
         "g": "a2b56414.ac5658",
         "group": "373ccf52.d5c97",
         "name": "Tasmota Devices",
-        "order": 0,
+        "order": 1,
         "width": "8",
         "height": "13",
         "columns": [
@@ -225,16 +232,6 @@
                 "width": "35%",
                 "align": "left",
                 "formatter": "html",
-                "formatterParams": {
-                    "target": "_blank"
-                }
-            },
-            {
-                "field": "zigbee",
-                "title": "Zigbee",
-                "width": "10%",
-                "align": "center",
-                "formatter": "tickCross",
                 "formatterParams": {
                     "target": "_blank"
                 }
@@ -262,7 +259,7 @@
             {
                 "field": "STATE.Uptime",
                 "title": "Uptime",
-                "width": "15%",
+                "width": "17%",
                 "align": "right",
                 "formatter": "plaintext",
                 "formatterParams": {
@@ -278,13 +275,27 @@
                 "formatterParams": {
                     "target": "_blank"
                 }
+            },
+            {
+                "field": "del",
+                "title": "Del",
+                "width": "3%",
+                "align": "right",
+                "formatter": "tickCross",
+                "formatterParams": {
+                    "target": "_blank"
+                }
             }
         ],
-        "outputs": 0,
-        "cts": false,
+        "outputs": 1,
+        "cts": true,
         "x": 810,
-        "y": 120,
-        "wires": []
+        "y": 80,
+        "wires": [
+            [
+                "5ebd7809.9c0b58"
+            ]
+        ]
     },
     {
         "id": "3b813b4e.f33614",
@@ -550,19 +561,33 @@
             {
                 "field": "status",
                 "title": "Status",
-                "width": "49%",
+                "width": "46%",
                 "align": "left",
                 "formatter": "plaintext",
                 "formatterParams": {
                     "target": "_blank"
                 }
+            },
+            {
+                "field": "del",
+                "title": "Del",
+                "width": "2%",
+                "align": "right",
+                "formatter": "tickCross",
+                "formatterParams": {
+                    "target": "_blank"
+                }
             }
         ],
-        "outputs": 0,
-        "cts": false,
+        "outputs": 1,
+        "cts": true,
         "x": 800,
         "y": 420,
-        "wires": []
+        "wires": [
+            [
+                "604d976c.ca65c"
+            ]
+        ]
     },
     {
         "id": "55507632.e9f688",
@@ -968,6 +993,162 @@
             [
                 "c47b9b62.cbd838"
             ]
+        ]
+    },
+    {
+        "id": "5ebd7809.9c0b58",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "a2b56414.ac5658",
+        "name": "",
+        "func": "if (msg.topic === \"del\") {\n    var devs = flow.get(\"tasmotas\") || {};\n    delete devs[msg.payload.name];\n    return;\n}\n\nmsg.topic = msg.payload.name;\n\nlet str = JSON.stringify(msg.payload, null, 2);\ndelete msg.payload;\nmsg.payload = \"<pre>\" + str + \"</pre>\";\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1000,
+        "y": 80,
+        "wires": [
+            [
+                "f6c18953.c0a0f"
+            ]
+        ]
+    },
+    {
+        "id": "604d976c.ca65c",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "89e68b6a.47e11",
+        "name": "",
+        "func": "if (msg.topic === \"del\") {\n    var devs = flow.get(\"t2zdevices\") || {};\n    delete devs[msg.payload.Device];\n    return;\n}\n\nmsg.topic = msg.payload.label;\n\nlet str = JSON.stringify(msg.payload, null, 2);\ndelete msg.payload;\nmsg.payload = \"<pre>\" + str + \"</pre>\";\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 960,
+        "y": 420,
+        "wires": [
+            [
+                "e50a0510.b75ba"
+            ]
+        ]
+    },
+    {
+        "id": "41ad9a48.328914",
+        "type": "ui_form",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "a2b56414.ac5658",
+        "name": "",
+        "label": "Sent message to all Tasmota devices",
+        "group": "373ccf52.d5c97",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "options": [
+            {
+                "label": "Command",
+                "value": "command",
+                "type": "text",
+                "required": true,
+                "rows": null
+            },
+            {
+                "label": "Parameters",
+                "value": "params",
+                "type": "text",
+                "required": true,
+                "rows": null
+            }
+        ],
+        "formValue": {
+            "command": "",
+            "params": ""
+        },
+        "payload": "",
+        "submit": "send",
+        "cancel": "clear",
+        "topic": "",
+        "x": 870,
+        "y": 140,
+        "wires": [
+            [
+                "f8a6cfbd.363e28"
+            ]
+        ]
+    },
+    {
+        "id": "f8a6cfbd.363e28",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "a2b56414.ac5658",
+        "name": "",
+        "func": "\nlet msg1 = {};\nmsg1.topic = \"cmnd/sonoffs/\"+msg.payload.command;\nmsg1.payload = msg.payload.params;\n\nlet msg2 = {};\nmsg2.topic = \"cmnd/tasmotas/\"+msg.payload.command;\nmsg2.payload = msg.payload.params;\n\nreturn [[msg1, msg2]];",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1120,
+        "y": 140,
+        "wires": [
+            [
+                "5e7b4dc6.a512c4"
+            ]
+        ]
+    },
+    {
+        "id": "5e7b4dc6.a512c4",
+        "type": "mqtt out",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "a2b56414.ac5658",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "broker": "3c0dc680.cc0542",
+        "x": 1270,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "f6c18953.c0a0f",
+        "type": "ui_toast",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "a2b56414.ac5658",
+        "position": "dialog",
+        "displayTime": "3",
+        "highlight": "",
+        "sendall": false,
+        "outputs": 1,
+        "ok": "Close",
+        "cancel": "",
+        "raw": true,
+        "topic": "",
+        "name": "Tasmota Device Info",
+        "x": 1220,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e50a0510.b75ba",
+        "type": "ui_toast",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "89e68b6a.47e11",
+        "position": "dialog",
+        "displayTime": "3",
+        "highlight": "",
+        "sendall": false,
+        "outputs": 1,
+        "ok": "Close",
+        "cancel": "",
+        "raw": true,
+        "topic": "",
+        "name": "Zigbee Device Info",
+        "x": 1150,
+        "y": 420,
+        "wires": [
+            []
         ]
     },
     {
