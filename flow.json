@@ -19,14 +19,14 @@
         "nodes": [
             "d1aae5ec.86e0b8",
             "c47b9b62.cbd838",
-            "ca2ee2dc.d020e",
-            "eaaf6424.48b1f8",
-            "4bf1e994.18008"
+            "26ce96f1.01c6fa",
+            "e6aa019e.cae5e8",
+            "75e3c117.755d6"
         ],
         "x": 14,
         "y": 499,
-        "w": 372,
-        "h": 202
+        "w": 622,
+        "h": 142
     },
     {
         "id": "351d8dfb.f1bdc2",
@@ -95,6 +95,30 @@
         "y": 379,
         "w": 572,
         "h": 82
+    },
+    {
+        "id": "9a03ede2.5154c8",
+        "type": "group",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "Create HomeAssistant auto-discovery for Zigbee Sensors",
+        "style": {
+            "stroke": "#3f93cf",
+            "label": true,
+            "color": "#3f93cf"
+        },
+        "nodes": [
+            "22f21bfe.3df30c",
+            "dd5879c4.418648",
+            "380815d9.09eb02",
+            "b61f7b97.7a3648",
+            "4f19af85.fb3458",
+            "42b5fb09.d0c1d4",
+            "18227de2.7865a2"
+        ],
+        "x": 694,
+        "y": 739,
+        "w": 552,
+        "h": 262
     },
     {
         "id": "a2b56414.ac5658",
@@ -222,7 +246,7 @@
         "g": "a2b56414.ac5658",
         "group": "373ccf52.d5c97",
         "name": "Tasmota Devices",
-        "order": 1,
+        "order": 2,
         "width": "8",
         "height": "13",
         "columns": [
@@ -406,8 +430,8 @@
         "crontab": "",
         "once": true,
         "onceDelay": "",
-        "topic": "cmnd/sonoffs/STATUS",
-        "payload": "5",
+        "topic": "ds",
+        "payload": "",
         "payloadType": "str",
         "x": 130,
         "y": 540,
@@ -427,7 +451,7 @@
         "qos": "",
         "retain": "",
         "broker": "3c0dc680.cc0542",
-        "x": 310,
+        "x": 490,
         "y": 540,
         "wires": []
     },
@@ -436,8 +460,8 @@
         "type": "function",
         "z": "eb6e5ef1.2cd4b8",
         "name": "store zigbee sensors",
-        "func": "if (msg.payload.ZbReceived === undefined) return;\n\n// properties that should  show up in the status\nvar inStatus = [\"Occupancy\", \"Power\", \"Power2\", \"Temperature\", \"Humidity\", \"Pressure\", \"LocalTemperature\", \"OccupiedHeatingSetpoint\", \"PIHeatingDemand\", \"Illuminance\", \"AqaraVibrationMode\", \"AqaraVibrationsOrAngle\"];\n\n// properties that should not show up in the status\nvar notStatus = [\"Device\", \"Name\", \"BatteryVoltage\", \"BatteryPercentage\", \"LinkQuality\", \"Endpoint\", \"bridge\", \"lastTime\", \"seen\", \"label\", \"status\", \"EurotronicErrors\", \"0201/4008\", \"Xiaomi_64\"];\n\n//node.warn(msg.payload);\n\nvar devs = flow.get(\"t2zdevices\") || {};\n\nfor (var devN in msg.payload.ZbReceived) {\n    let devInfo = msg.payload.ZbReceived[devN];\n    let ID = devInfo.Device;\n    \n    // get dev by ID\n    let dev = devs[ID] || {};\n\n    for (let prop in devInfo) {\n        dev[prop] = devInfo[prop];\n    }\n    \n    if (devInfo.Name!==undefined) {\n        dev.label = devInfo.Name;\n    } else {\n        dev.label = ID; \n    }\n    dev.bridge = msg.topic.split(\"/\")[1];\n    dev.lastTime = new Date().getTime();\n    \n    // create status from properties\n    let status = \"\";\n    for (let prop in dev) {\n        if (inStatus.includes(prop)) {\n            status += \" \"+prop+\": \"+ dev[prop]; \n        }\n    }\n    if (status === \"\") {\n        for (let prop in dev) {\n            if (! notStatus.includes(prop)) {\n                status += \" \"+prop+\": \"+ dev[prop]; \n            }\n        }   \n    }\n    dev.status = status;\n    \n    // write back\n    devs[ID] = dev;\n}\n\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\nflow.set(\"t2zdevices\", devs);\n\nreturn {payload:Object.values(devs)};\n",
-        "outputs": 1,
+        "func": "if (msg.payload.ZbReceived === undefined) return;\n\n// properties that should  show up in the status\nvar inStatus = [\"Contact\", \"Occupancy\", \"Power\", \"Power2\", \"Temperature\", \"Humidity\", \"Pressure\", \"LocalTemperature\", \"OccupiedHeatingSetpoint\", \"PIHeatingDemand\", \"Illuminance\", \"AqaraVibrationMode\", \"AqaraVibrationsOrAngle\", \"ZoneStatusChange\"];\n\n// properties that should not show up in the status\nvar notStatus = [\"Device\", \"Name\", \"BatteryVoltage\", \"BatteryPercentage\", \"LinkQuality\", \"Endpoint\", \"bridge\", \"lastTime\", \"seen\", \"label\", \"status\", \"EurotronicErrors\", \"0201/4008\", \"Xiaomi_64\"];\n\n//node.warn(msg.payload);\n\nvar devs = flow.get(\"t2zdevices\") || {};\n\nvar receivedSensors = []\nfor (var devN in msg.payload.ZbReceived) {\n    let devInfo = msg.payload.ZbReceived[devN];\n    let ID = devInfo.Device;\n    \n    // get dev by ID\n    let dev = devs[ID] || {};\n\n    for (let prop in devInfo) {\n        dev[prop] = devInfo[prop];\n    }\n    \n    if (devInfo.Name!==undefined) {\n        dev.label = devInfo.Name;\n    } else {\n        dev.label = ID; \n    }\n    dev.bridge = msg.topic.split(\"/\")[1];\n    dev.lastTime = new Date().getTime();\n    \n    // create status from properties\n    let status = \"\";\n    for (let prop in dev) {\n        if (inStatus.includes(prop)) {\n            status += \" \"+prop+\": \"+ dev[prop]; \n        }\n    }\n    if (status === \"\") {\n        for (let prop in dev) {\n            if (! notStatus.includes(prop)) {\n                status += \" \"+prop+\": \"+ dev[prop]; \n            }\n        }   \n    }\n    dev.status = status;\n    \n    // write back\n    devs[ID] = dev;\n    receivedSensors.push(dev);\n}\n\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\nflow.set(\"t2zdevices\", devs);\n\nreturn [{payload:Object.values(devs)}, {payload:receivedSensors}];\n",
+        "outputs": 2,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
@@ -447,6 +471,11 @@
             [
                 "cb97a93c.5c2bd8",
                 "d0303b49.1ba07"
+            ],
+            [
+                "380815d9.09eb02",
+                "42b5fb09.d0c1d4",
+                "22f21bfe.3df30c"
             ]
         ]
     },
@@ -888,66 +917,6 @@
         ]
     },
     {
-        "id": "ca2ee2dc.d020e",
-        "type": "inject",
-        "z": "eb6e5ef1.2cd4b8",
-        "g": "14cdd9b2.7c893e",
-        "name": "Send probe",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "1800",
-        "crontab": "",
-        "once": true,
-        "onceDelay": "",
-        "topic": "cmnd/tasmotas/STATUS",
-        "payload": "5",
-        "payloadType": "str",
-        "x": 130,
-        "y": 580,
-        "wires": [
-            [
-                "c47b9b62.cbd838"
-            ]
-        ]
-    },
-    {
-        "id": "eaaf6424.48b1f8",
-        "type": "inject",
-        "z": "eb6e5ef1.2cd4b8",
-        "g": "14cdd9b2.7c893e",
-        "name": "Send probe",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "1800",
-        "crontab": "",
-        "once": true,
-        "onceDelay": "",
-        "topic": "cmnd/sonoffs/STATUS",
-        "payload": "2",
-        "payloadType": "str",
-        "x": 130,
-        "y": 620,
-        "wires": [
-            [
-                "c47b9b62.cbd838"
-            ]
-        ]
-    },
-    {
         "id": "55717615.e3e87",
         "type": "mqtt in",
         "z": "eb6e5ef1.2cd4b8",
@@ -962,36 +931,6 @@
             [
                 "309310f2.10538",
                 "90206b3a.200bd"
-            ]
-        ]
-    },
-    {
-        "id": "4bf1e994.18008",
-        "type": "inject",
-        "z": "eb6e5ef1.2cd4b8",
-        "g": "14cdd9b2.7c893e",
-        "name": "Send probe",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "1800",
-        "crontab": "",
-        "once": true,
-        "onceDelay": "",
-        "topic": "cmnd/tasmotas/STATUS",
-        "payload": "2",
-        "payloadType": "str",
-        "x": 130,
-        "y": 660,
-        "wires": [
-            [
-                "c47b9b62.cbd838"
             ]
         ]
     },
@@ -1041,7 +980,7 @@
         "name": "",
         "label": "Sent message to all Tasmota devices",
         "group": "373ccf52.d5c97",
-        "order": 2,
+        "order": 3,
         "width": 0,
         "height": 0,
         "options": [
@@ -1150,6 +1089,222 @@
         "wires": [
             []
         ]
+    },
+    {
+        "id": "26ce96f1.01c6fa",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "14cdd9b2.7c893e",
+        "name": "Probe status",
+        "func": "\nvar msg1 = { topic:\"cmnd/sonoffs/STATUS\", payload:\"5\" };\nvar msg2 = { topic:\"cmnd/tasmotas/STATUS\", payload:\"5\" };\nvar msg3 = { topic:\"cmnd/sonoffs/STATUS\", payload:\"2\" };\nvar msg4 = { topic:\"cmnd/tasmotas/STATUS\", payload:\"2\" };\nreturn [ [msg1, msg2, msg3, msg4] ];\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 320,
+        "y": 540,
+        "wires": [
+            [
+                "c47b9b62.cbd838",
+                "75e3c117.755d6"
+            ]
+        ]
+    },
+    {
+        "id": "e6aa019e.cae5e8",
+        "type": "ui_button",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "14cdd9b2.7c893e",
+        "name": "",
+        "group": "373ccf52.d5c97",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Update",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "",
+        "x": 120,
+        "y": 580,
+        "wires": [
+            [
+                "26ce96f1.01c6fa"
+            ]
+        ]
+    },
+    {
+        "id": "75e3c117.755d6",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "14cdd9b2.7c893e",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 520,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "22f21bfe.3df30c",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "9a03ede2.5154c8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1130,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "dd5879c4.418648",
+        "type": "mqtt out",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "9a03ede2.5154c8",
+        "name": "retained",
+        "topic": "",
+        "qos": "",
+        "retain": "true",
+        "broker": "3c0dc680.cc0542",
+        "x": 1120,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "380815d9.09eb02",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "9a03ede2.5154c8",
+        "name": "Zigbee Data",
+        "func": "//if (msg.payload.ZbReceived === undefined) return;\n\nfor (var devN in msg.payload) {\n    let devInfo = msg.payload[devN];\n\n    let msgDev = {}\n    msgDev.topic = \"zigbee/\"+devInfo.Name\n\n    msgDev.payload = devInfo;\n    node.send(msgDev);\n    \n}\nreturn;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 810,
+        "y": 840,
+        "wires": [
+            [
+                "b61f7b97.7a3648",
+                "4f19af85.fb3458"
+            ]
+        ]
+    },
+    {
+        "id": "b61f7b97.7a3648",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "9a03ede2.5154c8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1130,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "4f19af85.fb3458",
+        "type": "mqtt out",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "9a03ede2.5154c8",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "broker": "3c0dc680.cc0542",
+        "x": 1110,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "42b5fb09.d0c1d4",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "9a03ede2.5154c8",
+        "name": "Homeassistant Zigbee Discover",
+        "func": "//if (msg.payload.ZbReceived === undefined) return;\n\nvar classes = {\n    \"Contact\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"},\n    \"Occupancy\":{\"type\":\"binary_sensor\", \"devclass\":\"occupancy\", \"unit\":\"\"},\n    \"Power\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"}, \n    \"Power2\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"}, \n    \"Temperature\":{\"type\":\"sensor\", \"devclass\":\"temperature\", \"unit\":\"°C\"}, \n    \"Humidity\":{\"type\":\"sensor\", \"devclass\":\"humidity\", \"unit\":\"%\"}, \n    \"Pressure\":{\"type\":\"sensor\", \"devclass\":\"pressure\", \"unit\":\"hPa\"}, \n    \"LocalTemperature\":{\"type\":\"sensor\", \"devclass\":\"temperature\", \"unit\":\"C\"}, \n    \"OccupiedHeatingSetpoint\":{\"type\":\"sensor\", \"devclass\":\"temperature\", \"unit\":\"°C\"}, \n    \"PIHeatingDemand\":{\"type\":\"sensor\", \"devclass\":\"power_factor\", \"unit\":\"%\"}, \n    \"Illuminance\":{\"type\":\"sensor\", \"devclass\":\"illuminance\", \"unit\":\"lm\"}, \n    \"AqaraVibrationMode\":{\"type\":\"sensor\", \"devclass\":\"None\", \"unit\":\"\"}, \n    \"AqaraVibrationsOrAngle\":{\"type\":\"sensor\", \"devclass\":\"None\", \"unit\":\"\"},\n    \"ZoneStatusChange\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"}\n}\n\n\nfor (var devN in msg.payload) {\n    let devInfo = msg.payload[devN];\n\n    // create device discovery from properties\n    let status = \"\";\n    for (let prop in devInfo) {\n        if (classes.hasOwnProperty(prop)) {\n            let devClass = classes[prop];\n            let msgDev = {}\n            \n            msgDev.payload = {\n                \"name\": devInfo.Name,\n                \"state_topic\": \"zigbee/\"+devInfo.Name,\n                \"value_template\": \"{{ value_json.\"+prop+\"}}\"\n            };\n            if (devClass.type===\"sensor\")   msgDev.payload[\"unit_of_measurement\"] = devClass.unit;\n            if (devClass.devclass!==\"None\") msgDev.payload[\"device_class\"] =  devClass.devclass;\n\n\n            if (devClass.type===\"sensor\") {\n                msgDev.topic = \"homeassistant/\"+devClass.type+\"/\"+devInfo.Name+\"/\"+prop+\"/config\"\n                \n            } else {\n                msgDev.topic = \"homeassistant/\"+devClass.type+\"/\"+devInfo.Name+\"_\"+prop+\"/config\"\n                msgDev.payload[\"payload_on\"] =  \"1\";\n                msgDev.payload[\"payload_off\"] = \"0\";\n            }\n            node.send(msgDev);\n        }\n    }\n}\nreturn;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 850,
+        "y": 940,
+        "wires": [
+            [
+                "18227de2.7865a2",
+                "dd5879c4.418648"
+            ]
+        ]
+    },
+    {
+        "id": "18227de2.7865a2",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "9a03ede2.5154c8",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1130,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "b448259e.862008",
+        "type": "mqtt in",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "",
+        "topic": "tasmota/discovery/#",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "3c0dc680.cc0542",
+        "x": 130,
+        "y": 700,
+        "wires": [
+            [
+                "3f9eab.46a61156"
+            ]
+        ]
+    },
+    {
+        "id": "3f9eab.46a61156",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 330,
+        "y": 700,
+        "wires": []
     },
     {
         "id": "3c0dc680.cc0542",
