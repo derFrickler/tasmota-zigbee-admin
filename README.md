@@ -8,6 +8,7 @@ right now the following features are implemented:
 *  table of all zigbee devices with info about their bridge, rssi, battery, last seen, status...
 *  enable zigbee pairing on a seletec zigbee bridge.
 *  renaming of zigbee devices from a list of all devices
+*  autodiscovery of zigbee sensors for HomeAssistant
 
 import the flow.json into your node-red instance and configure the mqtt nodes to your broker.
 
