@@ -17,4 +17,4 @@ required node-red plugins:
   
   if using node-red < 1.1, please install plugin node-red-node-group aswell.
 
-![Alt text](Tasmota_Zigbee_Admin.png?raw=true "Screenshot")
+![Alt text](Tasmota_Zigbee_Admin_latest.png?raw=true "Screenshot")
