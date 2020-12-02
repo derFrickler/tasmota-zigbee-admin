@@ -751,7 +751,7 @@
         "z": "eb6e5ef1.2cd4b8",
         "g": "42938028.0eb6e",
         "name": "Rename Zigbee Dev.",
-        "func": "let rename = flow.get(\"renameZigbee\") || {};\nflow.set(\"renameZigbee\", rename);\n\nif (msg.topic === \"oldname\" && msg.payload !== \"\") {\n    let vars = msg.payload.split(\"/\");\n    rename.bridge = vars[0];\n    rename.device = vars[1];\n    flow.set(\"renameZigbee\", rename);\n    return;\n} else if (msg.topic === \"newname\") {\n    rename.newname = msg.payload;\n    flow.set(\"renameZigbee\", rename);\n    return;\n} else if (msg.topic === \"rename\") {\n    msg.topic = \"cmnd/\"+rename.bridge+\"/ZbName\";\n    msg.payload = rename.device + \" \" + rename.newname;\n}\n\n\n\nreturn msg;",
+        "func": "let rename = flow.get(\"renameZigbee\") || {};\nflow.set(\"renameZigbee\", rename);\n\nif (msg.topic === \"oldname\" && msg.payload !== \"\") {\n    let vars = msg.payload.split(\"/\");\n    rename.bridge = vars[0];\n    rename.device = vars[1];\n    flow.set(\"renameZigbee\", rename);\n    return;\n} else if (msg.topic === \"newname\") {\n    rename.newname = msg.payload;\n    flow.set(\"renameZigbee\", rename);\n    return;\n} else if (msg.topic === \"rename\") {\n    msg.topic = \"cmnd/\"+rename.bridge+\"/ZbName\";\n    msg.payload = rename.device + \",\" + rename.newname;\n}\n\n\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1309,7 +1309,6 @@
     {
         "id": "3c0dc680.cc0542",
         "type": "mqtt-broker",
-        "z": "",
         "name": "homeserver localhost",
         "broker": "localhost",
         "port": "1883",
@@ -1330,7 +1329,6 @@
     {
         "id": "373ccf52.d5c97",
         "type": "ui_group",
-        "z": "",
         "name": "Tasmota Devices",
         "tab": "abe3d4c.9322328",
         "order": 1,
@@ -1341,7 +1339,6 @@
     {
         "id": "4d67a6b2.8bc0e",
         "type": "ui_group",
-        "z": "",
         "name": "Rename Zigbee Device",
         "tab": "abe3d4c.9322328",
         "order": 5,
@@ -1352,7 +1349,6 @@
     {
         "id": "d325c76.7444a38",
         "type": "ui_group",
-        "z": "",
         "name": "Zigbee Devices",
         "tab": "abe3d4c.9322328",
         "order": 3,
@@ -1363,7 +1359,6 @@
     {
         "id": "5b9b9721.b33e6",
         "type": "ui_group",
-        "z": "",
         "name": "Tasmota Zigbee Bridges",
         "tab": "abe3d4c.9322328",
         "order": 2,
@@ -1374,7 +1369,6 @@
     {
         "id": "6aae236.d2eeedc",
         "type": "ui_group",
-        "z": "",
         "name": "Manage Zigbee Bridges",
         "tab": "abe3d4c.9322328",
         "order": 4,
@@ -1385,7 +1379,6 @@
     {
         "id": "abe3d4c.9322328",
         "type": "ui_tab",
-        "z": "",
         "name": "Tasmota Zigbee Admin",
         "icon": "dashboard",
         "order": 1,
