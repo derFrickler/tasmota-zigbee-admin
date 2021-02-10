@@ -53,6 +53,26 @@
         "h": 262
     },
     {
+        "id": "4024dea4.ac4f5",
+        "type": "group",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "Publish \"zigbeesensor\" single Values to mqtt",
+        "style": {
+            "stroke": "#3f93cf",
+            "label": true,
+            "color": "#3f93cf"
+        },
+        "nodes": [
+            "2453b5cc.8eb68a",
+            "d968956a.64de8",
+            "d49f93fc.a185"
+        ],
+        "x": 694,
+        "y": 1159,
+        "w": 552,
+        "h": 122
+    },
+    {
         "id": "42938028.0eb6e",
         "type": "group",
         "z": "eb6e5ef1.2cd4b8",
@@ -113,12 +133,16 @@
             "b61f7b97.7a3648",
             "4f19af85.fb3458",
             "42b5fb09.d0c1d4",
-            "18227de2.7865a2"
+            "18227de2.7865a2",
+            "6ca2f438.a9d07c",
+            "480f4619.4a0e5",
+            "2a353efa.c97db2",
+            "42b8007d.1cbe98"
         ],
         "x": 694,
         "y": 739,
-        "w": 552,
-        "h": 262
+        "w": 712,
+        "h": 382
     },
     {
         "id": "a2b56414.ac5658",
@@ -142,6 +166,30 @@
         "y": 39,
         "w": 652,
         "h": 142
+    },
+    {
+        "id": "b6b06348.4c6b7",
+        "type": "group",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "Last Seen and Battery Notification",
+        "style": {
+            "stroke": "#3f93cf",
+            "label": true,
+            "color": "#3f93cf"
+        },
+        "nodes": [
+            "d3524de4.46e088",
+            "5fa87d5f.454da4",
+            "11a69cf5.56e78b",
+            "5fd23d71.fc215c",
+            "5835ee45.2214a",
+            "e0032daa.ca15a8",
+            "486aef62.80ee7"
+        ],
+        "x": 14,
+        "y": 659,
+        "w": 652,
+        "h": 302
     },
     {
         "id": "cd704120.a806e8",
@@ -192,7 +240,7 @@
         "qos": "2",
         "datatype": "auto",
         "broker": "3c0dc680.cc0542",
-        "x": 110,
+        "x": 90,
         "y": 260,
         "wires": [
             [
@@ -460,7 +508,7 @@
         "type": "function",
         "z": "eb6e5ef1.2cd4b8",
         "name": "store zigbee sensors",
-        "func": "if (msg.payload.ZbReceived === undefined) return;\n\n// properties that should  show up in the status\nvar inStatus = [\"Contact\", \"Occupancy\", \"Power\", \"Power2\", \"Temperature\", \"Humidity\", \"Pressure\", \"LocalTemperature\", \"OccupiedHeatingSetpoint\", \"PIHeatingDemand\", \"Illuminance\", \"AqaraVibrationMode\", \"AqaraVibrationsOrAngle\", \"ZoneStatusChange\"];\n\n// properties that should not show up in the status\nvar notStatus = [\"Device\", \"Name\", \"BatteryVoltage\", \"BatteryPercentage\", \"LinkQuality\", \"Endpoint\", \"bridge\", \"lastTime\", \"seen\", \"label\", \"status\", \"EurotronicErrors\", \"0201/4008\", \"Xiaomi_64\"];\n\n//node.warn(msg.payload);\n\nvar devs = flow.get(\"t2zdevices\") || {};\n\nvar receivedSensors = []\nfor (var devN in msg.payload.ZbReceived) {\n    let devInfo = msg.payload.ZbReceived[devN];\n    let ID = devInfo.Device;\n    \n    // get dev by ID\n    let dev = devs[ID] || {};\n\n    for (let prop in devInfo) {\n        dev[prop] = devInfo[prop];\n    }\n    \n    if (devInfo.Name!==undefined) {\n        dev.label = devInfo.Name;\n    } else {\n        dev.label = ID; \n    }\n    dev.bridge = msg.topic.split(\"/\")[1];\n    dev.lastTime = new Date().getTime();\n    \n    // create status from properties\n    let status = \"\";\n    for (let prop in dev) {\n        if (inStatus.includes(prop)) {\n            status += \" \"+prop+\": \"+ dev[prop]; \n        }\n    }\n    if (status === \"\") {\n        for (let prop in dev) {\n            if (! notStatus.includes(prop)) {\n                status += \" \"+prop+\": \"+ dev[prop]; \n            }\n        }   \n    }\n    dev.status = status;\n    \n    // write back\n    devs[ID] = dev;\n    receivedSensors.push(dev);\n}\n\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\nflow.set(\"t2zdevices\", devs);\n\nreturn [{payload:Object.values(devs)}, {payload:receivedSensors}];\n",
+        "func": "if (msg.payload.ZbReceived === undefined) return;\n\n// properties that should  show up in the status\nvar inStatus = [\"Contact\", \"Occupancy\", \"Power\", \"Power2\", \"Dimmer\", \"Hue\", \"CT\", \"ColorMode\", \"Sat\", \"RGB\", \"RGBb\", \"Temperature\", \"Humidity\", \"Pressure\", \"LocalTemperature\", \"OccupiedHeatingSetpoint\", \"PIHeatingDemand\", \"Illuminance\", \"AqaraVibrationMode\", \"AqaraVibrationsOrAngle\", \"ZoneStatusChange\"];\n\n// properties that should not show up in the status\nvar notStatus = [\"Device\", \"Name\", \"BatteryVoltage\", \"BatteryPercentage\", \"LinkQuality\", \"Endpoint\", \"bridge\", \"lastTime\", \"seen\", \"label\", \"status\", \"EurotronicErrors\", \"0201/4008\", \"Xiaomi_64\"];\n\n//node.warn(msg.payload);\n\nvar devs = flow.get(\"t2zdevices\") || {};\n\nvar receivedSensors = []\nfor (var devN in msg.payload.ZbReceived) {\n    let devInfo = msg.payload.ZbReceived[devN];\n    let ID = devInfo.Device;\n    \n    // get dev by ID\n    let dev = devs[ID] || {};\n\n    for (let prop in devInfo) {\n        dev[prop] = devInfo[prop];\n    }\n    \n    if (devInfo.Name!==undefined) {\n        dev.label = devInfo.Name;\n    } else {\n        dev.label = ID; \n    }\n    dev.bridge = msg.topic.split(\"/\")[1];\n    dev.lastTime = new Date().getTime();\n    \n    // create status from properties\n    let status = \"\";\n    for (let prop in dev) {\n        if (inStatus.includes(prop)) {\n            status += \" \"+prop+\": \"+ dev[prop]; \n        }\n    }\n    if (status === \"\") {\n        for (let prop in dev) {\n            if (! notStatus.includes(prop)) {\n                status += \" \"+prop+\": \"+ dev[prop]; \n            }\n        }   \n    }\n    dev.status = status;\n    \n    // write back\n    devs[ID] = dev;\n    receivedSensors.push(dev);\n}\n\nObject.entries(devs).forEach(element => element[1].seen = Math.round((new Date().getTime()-element[1].lastTime)/60000)+\"m\");\n\nflow.set(\"t2zdevices\", devs);\n\nreturn [{payload:Object.values(devs)}, {payload:receivedSensors}];\n",
         "outputs": 2,
         "noerr": 0,
         "initialize": "",
@@ -475,7 +523,8 @@
             [
                 "380815d9.09eb02",
                 "42b5fb09.d0c1d4",
-                "22f21bfe.3df30c"
+                "22f21bfe.3df30c",
+                "2453b5cc.8eb68a"
             ]
         ]
     },
@@ -1196,7 +1245,7 @@
         "noerr": 0,
         "initialize": "",
         "finalize": "",
-        "x": 810,
+        "x": 790,
         "y": 840,
         "wires": [
             [
@@ -1211,7 +1260,7 @@
         "z": "eb6e5ef1.2cd4b8",
         "g": "9a03ede2.5154c8",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1242,7 +1291,7 @@
         "z": "eb6e5ef1.2cd4b8",
         "g": "9a03ede2.5154c8",
         "name": "Homeassistant Zigbee Discover",
-        "func": "//if (msg.payload.ZbReceived === undefined) return;\n\nvar classes = {\n    \"Contact\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"},\n    \"Occupancy\":{\"type\":\"binary_sensor\", \"devclass\":\"occupancy\", \"unit\":\"\"},\n    \"Power\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"}, \n    \"Power2\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"}, \n    \"Temperature\":{\"type\":\"sensor\", \"devclass\":\"temperature\", \"unit\":\"°C\"}, \n    \"Humidity\":{\"type\":\"sensor\", \"devclass\":\"humidity\", \"unit\":\"%\"}, \n    \"Pressure\":{\"type\":\"sensor\", \"devclass\":\"pressure\", \"unit\":\"hPa\"}, \n    \"LocalTemperature\":{\"type\":\"sensor\", \"devclass\":\"temperature\", \"unit\":\"C\"}, \n    \"OccupiedHeatingSetpoint\":{\"type\":\"sensor\", \"devclass\":\"temperature\", \"unit\":\"°C\"}, \n    \"PIHeatingDemand\":{\"type\":\"sensor\", \"devclass\":\"power_factor\", \"unit\":\"%\"}, \n    \"Illuminance\":{\"type\":\"sensor\", \"devclass\":\"illuminance\", \"unit\":\"lm\"}, \n    \"AqaraVibrationMode\":{\"type\":\"sensor\", \"devclass\":\"None\", \"unit\":\"\"}, \n    \"AqaraVibrationsOrAngle\":{\"type\":\"sensor\", \"devclass\":\"None\", \"unit\":\"\"},\n    \"ZoneStatusChange\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"}\n}\n\n\nfor (var devN in msg.payload) {\n    let devInfo = msg.payload[devN];\n\n    // create device discovery from properties\n    let status = \"\";\n    for (let prop in devInfo) {\n        if (classes.hasOwnProperty(prop)) {\n            let devClass = classes[prop];\n            let msgDev = {}\n            \n            msgDev.payload = {\n                \"name\": devInfo.Name,\n                \"state_topic\": \"zigbee/\"+devInfo.Name,\n                \"value_template\": \"{{ value_json.\"+prop+\"}}\"\n            };\n            if (devClass.type===\"sensor\")   msgDev.payload[\"unit_of_measurement\"] = devClass.unit;\n            if (devClass.devclass!==\"None\") msgDev.payload[\"device_class\"] =  devClass.devclass;\n\n\n            if (devClass.type===\"sensor\") {\n                msgDev.topic = \"homeassistant/\"+devClass.type+\"/\"+devInfo.Name+\"/\"+prop+\"/config\"\n                \n            } else {\n                msgDev.topic = \"homeassistant/\"+devClass.type+\"/\"+devInfo.Name+\"_\"+prop+\"/config\"\n                msgDev.payload[\"payload_on\"] =  \"1\";\n                msgDev.payload[\"payload_off\"] = \"0\";\n            }\n            node.send(msgDev);\n        }\n    }\n}\nreturn;",
+        "func": "//if (msg.payload.ZbReceived === undefined) return;\n\nvar classes = {\n    \"Contact\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"},\n    \"Occupancy\":{\"type\":\"binary_sensor\", \"devclass\":\"occupancy\", \"unit\":\"\"},\n    \"Power\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"}, \n    \"Power2\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"}, \n    \"Temperature\":{\"type\":\"sensor\", \"devclass\":\"temperature\", \"unit\":\"°C\"}, \n    \"Humidity\":{\"type\":\"sensor\", \"devclass\":\"humidity\", \"unit\":\"%\"}, \n    \"Pressure\":{\"type\":\"sensor\", \"devclass\":\"pressure\", \"unit\":\"hPa\"}, \n    \"LocalTemperature\":{\"type\":\"sensor\", \"devclass\":\"temperature\", \"unit\":\"C\"}, \n    \"OccupiedHeatingSetpoint\":{\"type\":\"sensor\", \"devclass\":\"temperature\", \"unit\":\"°C\"}, \n    \"PIHeatingDemand\":{\"type\":\"sensor\", \"devclass\":\"power_factor\", \"unit\":\"%\"}, \n    \"Illuminance\":{\"type\":\"sensor\", \"devclass\":\"illuminance\", \"unit\":\"lm\"}, \n    \"AqaraVibrationMode\":{\"type\":\"sensor\", \"devclass\":\"None\", \"unit\":\"\"}, \n    \"AqaraVibrationsOrAngle\":{\"type\":\"sensor\", \"devclass\":\"None\", \"unit\":\"\"},\n    \"ZoneStatusChange\":{\"type\":\"binary_sensor\", \"devclass\":\"door\", \"unit\":\"\"}\n}\n\n\nfor (var devN in msg.payload) {\n    let devInfo = msg.payload[devN];\n    if (devInfo.Dimmer !== undefined) {\n        // we have a light bulb\n        let msgDev = {}\n        msgDev.topic = \"homeassistant/light/zigbee/\"+devInfo.Name+\"/config\"\n        msgDev.payload = {\n            \"name\": devInfo.Name,\n            \"unique_id\": devInfo.Name,\n            \"command_topic\": \"zigbee/send/\"+devInfo.Name+\"/Power\", \n            \"state_topic\":\"zigbee/\"+devInfo.Name+\"\", \n            \"state_value_template\":\"{{value_json.Power}}\", \n            \"payload_on\":\"1\", \n            \"payload_off\":\"0\", \n            \"brightness_command_topic\":\"zigbee/send/\"+devInfo.Name+\"/Dimmer\", \n            \"brightness_state_topic\":\"zigbee/\"+devInfo.Name+\"\", \n            \"brightness_value_template\":\"{{value_json.Dimmer}}\", \n            \"color_temp_command_topic\":\"zigbee/send/\"+devInfo.Name+\"/CT\", \n            \"color_temp_state_topic\":\"zigbee/\"+devInfo.Name+\"\", \n            \"color_temp_value_template\":\"{{value_json.CT}}\" \n        };\n        node.send(msgDev);\n    } else { // create sensors from properties\n        let status = \"\";\n        for (let prop in devInfo) {\n            if (classes.hasOwnProperty(prop)) {\n                let devClass = classes[prop];\n                let msgDev = {}\n                \n                msgDev.payload = {\n                    \"name\": devInfo.Name + \" \" + prop,\n                    \"unique_id\": devInfo.Name + \"_\" + prop,\n                    \"state_topic\": \"zigbee/\"+devInfo.Name,\n                    \"value_template\": \"{{ value_json.\"+prop+\"}}\"\n                };\n                if (devClass.type===\"sensor\")   msgDev.payload[\"unit_of_measurement\"] = devClass.unit;\n                \n                if (devClass.devclass!==\"None\") msgDev.payload[\"device_class\"] =  devClass.devclass;\n    \n    \n                if (devClass.type===\"sensor\") {\n                    msgDev.topic = \"homeassistant/\"+devClass.type+\"/\"+devInfo.Name+\"/\"+prop+\"/config\"\n                    \n                } else {\n                    msgDev.topic = \"homeassistant/\"+devClass.type+\"/\"+devInfo.Name+\"_\"+prop+\"/config\"\n                    msgDev.payload[\"payload_on\"] =  \"1\";\n                    msgDev.payload[\"payload_off\"] = \"0\";\n                }\n                node.send(msgDev);\n            }\n        }\n    }\n\n}\nreturn;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1262,7 +1311,7 @@
         "z": "eb6e5ef1.2cd4b8",
         "g": "9a03ede2.5154c8",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1283,7 +1332,7 @@
         "datatype": "auto",
         "broker": "3c0dc680.cc0542",
         "x": 130,
-        "y": 700,
+        "y": 1060,
         "wires": [
             [
                 "3f9eab.46a61156"
@@ -1294,6 +1343,58 @@
         "id": "3f9eab.46a61156",
         "type": "debug",
         "z": "eb6e5ef1.2cd4b8",
+        "name": "Tasmota Discovery",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 350,
+        "y": 1060,
+        "wires": []
+    },
+    {
+        "id": "2453b5cc.8eb68a",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "4024dea4.ac4f5",
+        "name": "Zigbee Data Singlevalues",
+        "func": "//if (msg.payload.ZbReceived === undefined) return;\n\nfor (var devN in msg.payload) {\n    let devInfo = msg.payload[devN];\n    for (let prop in devInfo) {\n        let msgDev = {}\n        msgDev.topic = \"zigbeesensors/\"+devInfo.Name+\"/\"+prop\n        msgDev.payload =  devInfo[prop];\n        node.send(msgDev);\n    }\n}\nreturn;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 830,
+        "y": 1200,
+        "wires": [
+            [
+                "d49f93fc.a185",
+                "d968956a.64de8"
+            ]
+        ]
+    },
+    {
+        "id": "d968956a.64de8",
+        "type": "mqtt out",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "4024dea4.ac4f5",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "broker": "3c0dc680.cc0542",
+        "x": 1110,
+        "y": 1240,
+        "wires": []
+    },
+    {
+        "id": "d49f93fc.a185",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "4024dea4.ac4f5",
         "name": "",
         "active": false,
         "tosidebar": true,
@@ -1302,9 +1403,262 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 330,
-        "y": 700,
+        "x": 1130,
+        "y": 1200,
         "wires": []
+    },
+    {
+        "id": "d3524de4.46e088",
+        "type": "inject",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "b6b06348.4c6b7",
+        "name": "Check LastSeen and Battery",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "14400",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 190,
+        "y": 700,
+        "wires": [
+            [
+                "5fa87d5f.454da4",
+                "e0032daa.ca15a8"
+            ]
+        ]
+    },
+    {
+        "id": "5fa87d5f.454da4",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "b6b06348.4c6b7",
+        "name": "Check Zigbee lastseen and Battery",
+        "func": "\nvar devs = flow.get(\"t2zdevices\") || {};\n\nvar warning = \"\";\nfor (var devN in devs) {\n    let devInfo = devs[devN];\n    //node.warn(devInfo.seen + \" \" + devInfo.BatteryPercentage);\n    if (devInfo.BatteryPercentage !== undefined && devInfo.BatteryPercentage < 25) {\n         //node.warn(devInfo.Name + \" Battery Low: \" + devInfo.BatteryPercentage);\n         warning += \"\\t\" + devInfo.Name + \" battery low : \" + devInfo.BatteryPercentage + \"%\\n\"\n    }\n    if (parseInt(devInfo.seen) > 180) {\n         //node.warn(devInfo.Name + \" seems offline: \" + devInfo.seen);\n         warning += \"\\t\" + devInfo.Name + \" seems offline: \" + devInfo.seen + \"\\n\"\n    }\n}\n\nnode.warn(warning);\nif (warning !== \"\") {\n    msg.payload = \"Zigbee Devices: \" + warning;\n    msg.sound = \"none\";\n    return msg;\n}\n\nreturn null;\n\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 500,
+        "y": 700,
+        "wires": [
+            [
+                "11a69cf5.56e78b",
+                "486aef62.80ee7"
+            ]
+        ]
+    },
+    {
+        "id": "11a69cf5.56e78b",
+        "type": "ui_toast",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "b6b06348.4c6b7",
+        "position": "top left",
+        "displayTime": "10",
+        "highlight": "",
+        "sendall": true,
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "raw": true,
+        "topic": "",
+        "name": "Device Warning!",
+        "x": 460,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "5fd23d71.fc215c",
+        "type": "comment",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "b6b06348.4c6b7",
+        "name": "Add your own notification service here:",
+        "info": "",
+        "x": 490,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "5835ee45.2214a",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "b6b06348.4c6b7",
+        "name": "Check Tasmota lastseen",
+        "func": "\n\nvar devs = flow.get(\"tasmotas\") || {};\n\nvar warning = \"\";\nfor (var devN in devs) {\n    let devInfo = devs[devN];\n    //node.warn(devInfo.name + \" \" + devInfo.seen);\n    if (parseInt(devInfo.seen) > 60) {\n         //node.warn(devInfo.name + \" seems offline: \" + devInfo.seen);\n         warning += \"\\t\" + devInfo.name + \" seems offline: \" + devInfo.seen + \"\\n\"\n    }\n}\n\nnode.warn(warning);\nif (warning !== \"\") {\n    msg.payload = \"Tasmota Devices: \" + warning;\n    msg.sound = \"none\";\n    return msg;\n}\n\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 470,
+        "y": 740,
+        "wires": [
+            [
+                "11a69cf5.56e78b",
+                "486aef62.80ee7"
+            ]
+        ]
+    },
+    {
+        "id": "e0032daa.ca15a8",
+        "type": "delay",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "b6b06348.4c6b7",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "30",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 240,
+        "y": 740,
+        "wires": [
+            [
+                "5835ee45.2214a"
+            ]
+        ]
+    },
+    {
+        "id": "486aef62.80ee7",
+        "type": "link out",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "b6b06348.4c6b7",
+        "name": "SensorsProblem Notification",
+        "links": [
+            "764cb81e.ab379"
+        ],
+        "x": 395,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "131e424d.803796",
+        "type": "mqtt in",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "",
+        "topic": "homeassistant/#",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "3c0dc680.cc0542",
+        "x": 120,
+        "y": 1120,
+        "wires": [
+            [
+                "c9a3f323.11dc68"
+            ]
+        ]
+    },
+    {
+        "id": "c9a3f323.11dc68",
+        "type": "debug",
+        "z": "eb6e5ef1.2cd4b8",
+        "name": "Homeassistant Discovery",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 370,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "6ca2f438.a9d07c",
+        "type": "mqtt in",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "9a03ede2.5154c8",
+        "name": "",
+        "topic": "zigbee/send/#",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "3c0dc680.cc0542",
+        "x": 790,
+        "y": 1020,
+        "wires": [
+            [
+                "480f4619.4a0e5"
+            ]
+        ]
+    },
+    {
+        "id": "480f4619.4a0e5",
+        "type": "function",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "9a03ede2.5154c8",
+        "name": "convert zigbee/send to Tasmota JSon CMD",
+        "func": "let tops = msg.topic.split(\"/\");\nlet device = tops[2];\nlet cmd = tops[3];\nlet val = msg.payload;\n\nmsg.payload = '{\"device\":\"'+device+'\", \"send\":{\"'+cmd+'\":\"'+val+'\"}}'\n\nmsg.topic = \"cmnd/ZBBridgeEG2/ZBSend\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 1070,
+        "y": 1020,
+        "wires": [
+            [
+                "2a353efa.c97db2"
+            ]
+        ]
+    },
+    {
+        "id": "2a353efa.c97db2",
+        "type": "mqtt out",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "9a03ede2.5154c8",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "broker": "3c0dc680.cc0542",
+        "x": 1330,
+        "y": 1060,
+        "wires": []
+    },
+    {
+        "id": "42b8007d.1cbe98",
+        "type": "inject",
+        "z": "eb6e5ef1.2cd4b8",
+        "g": "9a03ede2.5154c8",
+        "name": "SetOption19=0 -> use Tasmota integration (default)",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1800",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "topic": "cmnd/tasmotas/SetOption19",
+        "payload": "0",
+        "payloadType": "str",
+        "x": 940,
+        "y": 1080,
+        "wires": [
+            [
+                "2a353efa.c97db2"
+            ]
+        ]
     },
     {
         "id": "3c0dc680.cc0542",
